@@ -103,9 +103,22 @@ async fn ws_handler(
 }
 
 async fn handle_socket(socket: WebSocket, state: Arc<AppState>, who_am_i: i64) {
+
+    let username = format!("Guest_{}", who_am_i);
+    let email = format!("guest_{}@pulse.com", who_am_i); // 確保 email 不重複
+
+    let _ = sqlx::query("INSERT INTO users (id, username, email, password_hash) VALUES (?, ?, ?, 'guest_pwd') ON DUPLICATE KEY UPDATE id=id")
+        .bind(who_am_i)
+        .bind(&username)
+        .bind(&email)
+        .execute(&state.pool)
+        .await;
+
     // 1. 拆分 socket 為「發送端 (sender)」和「接收端 (receiver)」
     // 這樣我們才能同時做「聽別人講話」和「自己講話」兩件事
     let (mut sender, mut receiver) = socket.split();
+
+
 
     // 2. 訂閱廣播頻道 (每個人連上來都會拿到一個「耳機」)
     let mut rx = state.tx.subscribe();
