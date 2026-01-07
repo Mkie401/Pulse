@@ -1,0 +1,31 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: pulse-backend
+
+  # 資料庫設定 (MySQL)
+  datasource:
+    # 注意：如果你的 MySQL 是用 Docker 跑，且你是在本機跑 Java，這裡用 localhost
+    url: jdbc:mysql://localhost:3307/Pulse_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&characterEncoding=utf8
+    username: root        # 請確認這是你在 Docker/MySQL 設定的帳號
+    password: root        # 請修改為你在 Docker/MySQL 設定的密碼
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  # JPA 設定 (自動建表)
+  jpa:
+    hibernate:
+      ddl-auto: update    # 開發時使用 update，它會自動幫你建立/更新資料表
+    show-sql: true        # 在 Console 顯示執行的 SQL 語句，方便除錯
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+
+  # Redis 設定 (快取與 Session)
+  data:
+    redis:
+      host: localhost
+      port: 16379
+      database: 0
