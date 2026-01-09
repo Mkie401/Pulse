@@ -1,18 +1,23 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import path from 'path';
+import { defineConfig, loadEnv } from 'vite';
+import react from '@vitejs/plugin-react';
 
-// https://vite.dev/config/
-export default defineConfig({
-  plugins: [react()],
-  server: {
-    allowedHosts: ['api.ecooikos.com'],
-    // 加入這段設定
-    proxy: {
-      '/ws': {
-        target: 'ws://127.0.0.1:3000', // 轉發到你的 Rust 後端
-        changeOrigin: true,
-        ws: true, // 關鍵：開啟 WebSocket 支援
+export default defineConfig(({ mode }) => {
+    const env = loadEnv(mode, '.', '');
+    return {
+      server: {
+        port: 3000,
+        host: '0.0.0.0',
       },
-    },
-  },
-})
+      plugins: [react()],
+      define: {
+        'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
+        'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
+      },
+      resolve: {
+        alias: {
+          '@': path.resolve(__dirname, './src'),
+        }
+      }
+    };
+});

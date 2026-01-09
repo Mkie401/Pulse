@@ -5,7 +5,7 @@ use axum::{
     Json,
     Router,
 };
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use sqlx::mysql::{MySqlPool, MySqlPoolOptions};
 use std::env;
 use dotenvy::dotenv;
@@ -23,6 +23,15 @@ struct User {
     username: String,
     email: String,
 }
+
+// 用於反序列化請求 body
+#[derive(Deserialize)]
+struct CreateUser {
+    username: String,
+    email: String,
+    password_hash: String,
+}
+
 
 // 1. 定義我們的應用程式狀態
 // 這是一個「背包」，裡面裝著所有我們要讓不同使用者共享的東西
@@ -62,7 +71,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let app = Router::new()
         .route("/", get(root_handler))
-        .route("/users", get(get_users))
+        .route("/users", get(get_users).post(add_user)) // Chain GET and POST
         .route("/ws", get(ws_handler))
         .with_state(shared_state); // 3. 這裡傳入完整的 app_state
 
@@ -78,6 +87,36 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 async fn root_handler() -> &'static str {
     "Hello, Pulse! Rust Server is running! "
 }
+
+async fn add_user(
+    State(state): State<Arc<AppState>>,
+    Json(payload): Json<CreateUser>,
+) -> Result<Json<serde_json::Value>, String> {
+    let user_id = get_next_id(); // 產生新的使用者 ID
+
+    let result = sqlx::query("INSERT INTO users (id, username, email, password_hash) VALUES (?, ?, ?, ?)")
+        .bind(user_id)
+        .bind(&payload.username)
+        .bind(&payload.email)
+        .bind(&payload.password_hash)
+        .execute(&state.pool)
+        .await;
+
+    match result {
+        Ok(_) => {
+            let response = serde_json::json!({
+                "status": "success",
+                "user_id": user_id,
+            });
+            Ok(Json(response))
+        }
+        Err(e) => {
+            println!("建立使用者失敗: {:?}", e);
+            Err(e.to_string())
+        }
+    }
+}
+
 
 // 注意：這裡的 State 從 MySqlPool 變成了 AppState，要從 state.pool 拿資料庫連線
 async fn get_users(State(state): State<Arc<AppState>>) -> Result<Json<Vec<User>>, String> {

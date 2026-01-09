@@ -1,13 +1,127 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="zh-TW">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>pulse-web</title>
-  </head>
+    <title>Pulse - Tactical Command</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Rajdhani', 'sans-serif'],
+              mono: ['"Share Tech Mono"', 'monospace'],
+            },
+            colors: {
+              cyber: {
+                black: '#020617',
+                dark: '#0f172a',
+                slate: '#1e293b',
+                dim: '#334155',
+              },
+              neon: {
+                blue: '#00f3ff',
+                purple: '#bc13fe',
+                green: '#0aff00',
+                red: '#ff003c',
+              }
+            },
+            animation: {
+              'pulse-fast': 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+              'scanline': 'scanline 8s linear infinite',
+              'glitch': 'glitch 1s linear infinite',
+              'spin-slow': 'spin 10s linear infinite',
+            },
+            keyframes: {
+              scanline: {
+                '0%': { transform: 'translateY(-100%)' },
+                '100%': { transform: 'translateY(100%)' },
+              },
+              glitch: {
+                '2%, 64%': { transform: 'translate(2px,0) skew(0deg)' },
+                '4%, 60%': { transform: 'translate(-2px,0) skew(0deg)' },
+                '62%': { transform: 'translate(0,0) skew(5deg)' },
+              }
+            },
+            boxShadow: {
+              'neon-blue': '0 0 5px #00f3ff, 0 0 10px #00f3ff',
+              'neon-green': '0 0 5px #0aff00, 0 0 10px #0aff00',
+              'neon-red': '0 0 5px #ff003c, 0 0 10px #ff003c',
+            }
+          },
+        },
+      }
+    </script>
+    <style>
+      body {
+        background-color: #020617;
+        color: #e2e8f0;
+        overflow-x: hidden;
+      }
+      
+      /* Sci-Fi Grid Background */
+      .bg-cyber-grid {
+        background-image: 
+          linear-gradient(rgba(0, 243, 255, 0.03) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(0, 243, 255, 0.03) 1px, transparent 1px);
+        background-size: 40px 40px;
+        position: relative;
+      }
+
+      .bg-cyber-grid::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: radial-gradient(circle at center, transparent 0%, #020617 90%);
+        pointer-events: none;
+      }
+
+      /* Cyber Scrollbar */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #0f172a;
+        border: 1px solid #1e293b;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #334155;
+        border: 1px solid #00f3ff;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #00f3ff;
+        box-shadow: 0 0 10px #00f3ff;
+      }
+
+      /* Utility classes for angled corners */
+      .clip-corner-tl {
+        clip-path: polygon(10px 0, 100% 0, 100% 100%, 0 100%, 0 10px);
+      }
+      .clip-corner-br {
+        clip-path: polygon(0 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%);
+      }
+      .clip-corner-both {
+        clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.2.3",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.35.0",
+    "lucide-react": "https://esm.sh/lucide-react@^0.562.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <div id="root" class="bg-cyber-grid min-h-screen"></div>
+    <script type="module" src="/src/index.tsx"></script>
   </body>
 </html>

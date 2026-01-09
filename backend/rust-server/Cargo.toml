@@ -14,3 +14,4 @@ tracing-subscriber = "0.3"
 futures = "0.3.31"
 # 用於產生 ID
 rs-snowflake = "0.6"
+serde_json = "1.0.149"

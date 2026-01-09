@@ -1,103 +1,93 @@
-// src/App.tsx
-import { useState, useEffect, useRef } from 'react';
-import { useChat } from './hooks/useChat';
-import { ConnectionStatus } from './types';
-
-// 設定你的測試網址 (記得 user_id=1001)
-// 注意：因為你的網域有 SSL，所以要用 wss://
-const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-const host = window.location.host; // 這會自動抓到 api.ecooikos.com 或 localhost:5173
-
-// 組合起來：wss://api.ecooikos.com/ws?user_id=...
-// 注意：因為我們在 vite.config.ts 設定了 proxy，所以連到這裡會被轉去 3000
-const randomId = Math.floor(Math.random() * 100000);
-const WS_URL = `${protocol}//${host}/ws?user_id=${randomId}`;
+import React from 'react';
+import Sidebar from './components/Sidebar';
+import LiveSpace from './components/LiveSpace';
+import ChatCard from './components/ChatCard';
+import TaskBoard from './components/TaskBoard';
+import { Search, Bell, Shield, Zap } from 'lucide-react';
+import { CURRENT_USER } from './constants';
 
 function App() {
-    const { messages, status, sendMessage } = useChat(WS_URL);
-    const [inputValue, setInputValue] = useState('');
-
-    // 自動捲動到底部的 ref
-    const messagesEndRef = useRef<HTMLDivElement>(null);
-
-    const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    };
-
-    useEffect(() => {
-        scrollToBottom();
-    }, [messages]);
-
-    const handleSend = () => {
-        if (!inputValue.trim()) return;
-        sendMessage(inputValue);
-        setInputValue('');
-    };
-
-    return (
-        // 外層容器：深色背景，全螢幕高度
-        <div className="flex flex-col h-screen bg-gray-900 text-white font-sans overflow-hidden">
-
-            {/* 頂部導覽列 */}
-            <div className="p-4 bg-gray-800 shadow-lg border-b border-gray-700 flex justify-between items-center z-10">
-                <h1 className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 text-transparent bg-clip-text">
-                    Pulse Chat
+  return (
+    <div className="min-h-screen font-sans text-white overflow-hidden relative selection:bg-neon-blue selection:text-black">
+        <Sidebar />
+      
+      <main className="pl-20 min-h-screen relative z-10">
+        <div className="max-w-[1800px] mx-auto p-6 lg:p-10 h-screen flex flex-col">
+          
+          {/* Top Bar */}
+          <header className="flex justify-between items-center mb-6 bg-cyber-dark/80 border-b border-neon-blue/30 p-4 clip-corner-br backdrop-blur-md">
+            <div className="flex items-center gap-4">
+              <div className="w-1 h-8 bg-neon-blue shadow-neon-blue"></div>
+              <div>
+                <h1 className="text-3xl font-mono font-bold text-white tracking-[0.2em] flex items-center gap-2 uppercase">
+                  Pulse <span className="text-neon-blue text-sm align-top">SYS.VER.2.0</span>
                 </h1>
-                <div className="flex items-center gap-2">
-                    {/* 狀態燈號 */}
-                    <span className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                        status === ConnectionStatus.Connected ? 'bg-green-500 shadow-[0_0_10px_#22c55e]' : 'bg-red-500'
-                    }`}></span>
-                    <span className="text-sm text-gray-300">{status}</span>
+                <p className="text-slate-400 font-mono text-xs tracking-wider">WELCOME BACK, COMMANDER {CURRENT_USER.name}</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-6 pr-4">
+              <div className="relative hidden md:block group">
+                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-neon-blue" />
+                <input 
+                  type="text" 
+                  placeholder="SEARCH DATABASE..." 
+                  className="pl-10 pr-4 py-2 bg-cyber-black border border-cyber-slate rounded-none text-xs w-64 focus:outline-none focus:border-neon-blue focus:shadow-neon-blue transition-all font-mono placeholder-slate-600 text-white uppercase clip-corner-br"
+                />
+              </div>
+              
+              <div className="flex gap-4">
+                  <button className="p-2 border border-cyber-slate text-slate-400 hover:text-neon-blue hover:border-neon-blue hover:shadow-neon-blue transition-all relative">
+                    <Bell size={20} />
+                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-neon-red shadow-neon-red"></span>
+                  </button>
+                  <button className="p-2 border border-cyber-slate text-slate-400 hover:text-neon-green hover:border-neon-green hover:shadow-neon-green transition-all">
+                    <Shield size={20} />
+                  </button>
+              </div>
+
+              <div className="flex items-center gap-3 border-l border-cyber-slate pl-6">
+                <div className="text-right hidden sm:block">
+                    <div className="text-xs font-bold text-white uppercase">{CURRENT_USER.name}</div>
+                    <div className="text-[10px] text-neon-green font-mono">STATUS: ONLINE</div>
                 </div>
-            </div>
-
-            {/* 中間：訊息顯示區 */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent">
-                {messages.length === 0 && (
-                    <div className="flex flex-col items-center justify-center h-full text-gray-500 opacity-60">
-                        <p className="text-lg">尚無訊息</p>
-                        <p className="text-sm">試著說點什麼吧！</p>
-                    </div>
-                )}
-
-                {messages.map((msg, index) => (
-                    <div key={index} className={`flex ${msg.is_self ? 'justify-end' : 'justify-start'} animate-fade-in-up`}>
-                        <div className={`max-w-[75%] px-4 py-2 rounded-2xl shadow-md break-words text-sm md:text-base ${
-                            msg.is_self
-                                ? 'bg-blue-600 text-white rounded-tr-none'
-                                : 'bg-gray-700 text-gray-100 rounded-tl-none'
-                        }`}>
-                            <p>{msg.content}</p>
-                        </div>
-                    </div>
-                ))}
-                <div ref={messagesEndRef} />
-            </div>
-
-            {/* 底部：輸入框 */}
-            <div className="p-4 bg-gray-800 border-t border-gray-700">
-                <div className="max-w-4xl mx-auto flex gap-3">
-                    <input
-                        type="text"
-                        className="flex-1 bg-gray-700 text-white rounded-full px-5 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all placeholder-gray-400"
-                        placeholder="輸入訊息..."
-                        value={inputValue}
-                        onChange={(e) => setInputValue(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                        disabled={status !== ConnectionStatus.Connected}
+                <div className="relative p-0.5 border border-neon-blue clip-corner-tl">
+                     <img 
+                        src={CURRENT_USER.avatar} 
+                        alt="Profile" 
+                        className="w-10 h-10 bg-black object-cover"
                     />
-                    <button
-                        onClick={handleSend}
-                        disabled={status !== ConnectionStatus.Connected}
-                        className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-6 py-2 rounded-full font-medium transition-all shadow-lg active:scale-95 whitespace-nowrap"
-                    >
-                        送出
-                    </button>
                 </div>
+              </div>
             </div>
+          </header>
+
+          {/* Grid Layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 min-h-0 pb-2">
+            
+            {/* Left Column: Voice & Tasks (Width 7/12) */}
+            <div className="lg:col-span-7 flex flex-col gap-6 h-full min-h-0">
+              {/* Voice Widget */}
+              <div className="shrink-0">
+                <LiveSpace />
+              </div>
+              
+              {/* Task Board */}
+              <div className="flex-1 min-h-0">
+                <TaskBoard />
+              </div>
+            </div>
+
+            {/* Right Column: Chat (Width 5/12) */}
+            <div className="lg:col-span-5 h-full min-h-0">
+              <ChatCard />
+            </div>
+
+          </div>
         </div>
-    );
+      </main>
+    </div>
+  );
 }
 
 export default App;
